@@ -11,7 +11,7 @@ SERVICES        := akinator-api
 COMPOSE_FILE    := compose.yaml
 DEFAULT_BRANCH  := main
 
-COMPOSE_PATH = $(shell pwd)/$(1)/$(if $($(1)_COMPOSE_FILE),$($(1)_COMPOSE_FILE),$(COMPOSE_FILE))
+COMPOSE_PATH = $(shell pwd)/$(COMPOSE_FILE)
 
 ###############################################################################
 # • help-центр ##
@@ -26,10 +26,10 @@ help: ## Показать меню с целями
 # • compose up / down / rebuild ##
 ###############################################################################
 %-run: ## docker compose up -d для $*
-	docker compose -f $(call COMPOSE_PATH,$*) up -d
+	docker compose -f $(COMPOSE_PATH) up -d
 
 %-off: ## docker compose down --remove-orphans для $*
-	docker compose -f $(call COMPOSE_PATH,$*) down --remove-orphans
+	docker compose -f $(COMPOSE_PATH) down --remove-orphans
 
 %-re: ## Перезапустить $*
 	@$(MAKE) $*-off && $(MAKE) $*-run
@@ -44,7 +44,7 @@ off: ## остановить указанный сервис (S=)
 	@$(MAKE) $(S)-off
 
 %-build: ## пересобрать образ для $*
-	docker compose -f $(call COMPOSE_PATH,$*) build $*
+	docker compose -f $(COMPOSE_PATH) build $*
 
 build: ## пересобрать указанный сервис (S=)
 	@if [ -z "$(S)" ]; then echo '✖ укажите сервис: make build S='; exit 1; fi
@@ -64,11 +64,11 @@ re:   down up             ## перезапуск всех сервисов
 # • логи ##
 ###############################################################################
 logs-%:              ## tail ‑f логов выбранного сервиса
-	docker compose -f $(call COMPOSE_PATH,$*) logs -f $*
+	docker compose -f $(COMPOSE_PATH) logs -f $*
 
 logs:                ## tail ‑f логов всех сервисов
 	@for s in $(SERVICES); do \
-	   docker compose -f $(call COMPOSE_PATH,$$s) logs -f $$s & \
+	   docker compose -f $(COMPOSE_PATH) logs -f $$s & \
 	done; wait
 
 ###############################################################################
@@ -76,7 +76,7 @@ logs:                ## tail ‑f логов всех сервисов
 ###############################################################################
 wipe: $(SERVICES:%=wipe-%) ## down‑v + orphan cleanup (DEV ⚠️)
 wipe-%:
-	docker compose -f $(call COMPOSE_PATH,$*) down -v --remove-orphans
+	docker compose -f $(COMPOSE_PATH) down -v --remove-orphans
 
 clean: down ## down + удалить все тома и образы
 	docker system prune -f --volumes
