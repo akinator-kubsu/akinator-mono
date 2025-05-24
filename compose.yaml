@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  akinator-api:
+    build:
+      context: ./AkinatorApiService
+      dockerfile: Dockerfile
+    env_file:
+      - config.env
+    ports:
+      - "${API_PORT_HTTP}:80"
+      - "${API_PORT_HTTPS}:443"
+    volumes:
+      - ./AkinatorApiService/Properties/launchSettings.json:/app/Properties/launchSettings.json:ro
+      - akinator-data:/root/.aspnet/DataProtection-Keys
+    networks:
+      - akinator-network
+
+networks:
+  akinator-network:
+    driver: bridge
+
+volumes:
+  akinator-data: 
