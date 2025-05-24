@@ -1,1 +1,51 @@
 .vs/**
+dotnet-tools.json
+.DS_Store
+
+# .NET build output
+bin/
+obj/
+
+# Visual Studio files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
