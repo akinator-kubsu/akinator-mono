@@ -7,12 +7,19 @@ services:
       dockerfile: Dockerfile
     env_file:
       - config.env
+    environment:
+      - SENTRY_DSN=https://d31fac0ec6335ec33e8972670e74fcf0@o4509378568454144.ingest.us.sentry.io/4509378570420224
+      - SENTRY_ENVIRONMENT=production
+      - SENTRY_TRACES_SAMPLE_RATE=1.0
     ports:
       - "${API_PORT_HTTP}:80"
       - "${API_PORT_HTTPS}:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./AkinatorApiService/Properties/launchSettings.json:/app/Properties/launchSettings.json:ro
       - akinator-data:/root/.aspnet/DataProtection-Keys
+      - ./AkinatorApiService/logs:/app/logs
     networks:
       - akinator-network
 
