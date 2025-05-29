@@ -1,0 +1,37 @@
+﻿@page
+@model AkinatorWeb.Pages.HomeModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container mt-5">
+    <h1>Добро пожаловать, @Model.Username!</h1>
+
+    <div class="mt-4">
+        <h2>Ваши предыдущие игры:</h2>
+        @if (Model.PreviousSessions.Any())
+        {
+            <div class="list-group">
+                @foreach (var session in Model.PreviousSessions)
+                {
+                    <div class="list-group-item">
+                        <h5 class="mb-1">@session.CharacterName</h5>
+                        <p class="mb-1">Начало: @session.StartedAt.ToString("g")</p>
+                        @if (session.EndedAt.HasValue)
+                        {
+                            <small>Окончание: @session.EndedAt.Value.ToString("g")</small>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>У вас пока нет сыгранных игр.</p>
+        }
+    </div>
+
+    <div class="mt-4">
+        <a href="/Game" class="btn btn-primary">Начать новую игру</a>
+    </div>
+</div>

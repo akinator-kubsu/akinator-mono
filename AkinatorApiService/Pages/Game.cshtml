@@ -1,0 +1,28 @@
+﻿@page
+@model AkinatorWeb.Pages.GameModel
+@{
+    ViewData["Title"] = "Игра";
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <h1>Играем в Акинатор</h1>
+    <form method="post">
+        <div>
+            <label>@Model.CurrentQuestionText</label>
+        </div>
+        <button type="submit" name="Answer" value="yes">Да</button>
+        <button type="submit" name="Answer" value="no">Нет</button>
+    </form>
+    @if (Model.Finished)
+    {
+        <div>
+            <strong>@Model.FinalResult</strong>
+        </div>
+    }
+</body>
+</html>

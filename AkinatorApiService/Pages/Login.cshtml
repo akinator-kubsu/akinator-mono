@@ -1,0 +1,17 @@
+﻿@page
+@model AkinatorWeb.Pages.LoginModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<h2>Вход в Акинатор</h2>
+
+<form method="post">
+    <label>Имя пользователя:</label><br />
+    <input type="text" name="Username" /><br />
+    <button type="submit">Войти</button>
+</form>
+@if (Model.Message != null)
+{
+        <p>@Model.Message</p>
+}

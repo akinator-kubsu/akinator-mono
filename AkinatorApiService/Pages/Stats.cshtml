@@ -1,0 +1,14 @@
+﻿@page
+@model AkinatorWeb.Pages.StatsModel
+@{
+    ViewData["Title"] = "Статистика";
+}
+
+<h2>Статистика по Акинатору</h2>
+
+<ul>
+    <li>Всего пользователей: <strong>@Model.UserCount</strong></li>
+    <li>Всего игровых сессий: <strong>@Model.SessionCount</strong></li>
+</ul>
+
+<a asp-page="/Home">Вернуться на главную</a>
