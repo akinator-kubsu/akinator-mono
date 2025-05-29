@@ -1,6 +1,86 @@
-# Акинатор
+# Akinator Project
 
-> Это проект направленный на получение замозачета по функциональному программированию.
+Проект реализует игру "Акинатор" с использованием Prolog для логики игры, ASP.NET для API и F# для аналитики.
+
+## Требования
+
+- Docker
+- Docker Compose
+- Git
+
+## Структура проекта
+
+- `AkinatorLogicService/` - Prolog сервис с логикой игры
+- `AkinatorApiService/` - ASP.NET API сервис
+- `compose.yaml` - конфигурация Docker Compose
+- `config.env` - переменные окружения
+
+## Развертывание
+
+1. Клонируйте репозиторий:
+```bash
+git clone <repository-url>
+cd akinator
+```
+
+2. Создайте файл `config.env` в корневой директории:
+```bash
+ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://+:80
+API_PORT_HTTP=8080
+API_PORT_HTTPS=8443
+API_SERVICE_URL=http://host.docker.internal:7025
+```
+
+3. Запустите проект:
+```bash
+make up
+```
+
+Или для запуска в режиме разработки:
+```bash
+make dev
+```
+
+4. Остановка проекта:
+```bash
+make down
+```
+
+## Доступ к сервисам
+
+- API сервис: http://localhost:8080
+- Swagger UI: http://localhost:8080/swagger
+
+## Полезные команды
+
+- `make help` - показать список доступных команд
+- `make logs` - просмотр логов всех сервисов
+- `make logs-SERVICE` - просмотр логов конкретного сервиса
+- `make rebuild S=SERVICE` - пересобрать и перезапустить сервис
+- `make dev-rebuild` - пересобрать и перезапустить проект в режиме разработки
+
+## Разработка
+
+### Переключение между пользователями
+
+```bash
+make artem    # Artem-Darius Weber
+make sergey   # Sergey Dudo
+make meg      # Meg-Lander
+```
+
+### Структура базы данных
+
+Проект использует SQLite для хранения данных. База данных автоматически создается при первом запуске.
+
+### Мониторинг
+
+Проект интегрирован с Sentry для мониторинга ошибок и производительности.
+
+## Лицензия
+
+MIT
 
 # Начало работы
 
