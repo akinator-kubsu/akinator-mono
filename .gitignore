@@ -49,3 +49,25 @@ bld/
 !**/packages/build/
 *.nuget.props
 *.nuget.targets
+
+# Logs
+logs/
+*.log
+sentry/
+
+# Environment files
+# config.env
+# *.env
+appsettings.Development.json
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+AkinatorApiService/bin/
+AkinatorApiService/obj/
+AkinatorLogicService/bin/
+AkinatorLogicService/obj/
