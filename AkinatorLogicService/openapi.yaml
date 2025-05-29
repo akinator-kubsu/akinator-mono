@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Akinator Logic Service API
+  version: 1.0.0
+  description: API для логики игры Акинатор
+
+paths:
+  /game/next_question:
+    post:
+      summary: Получить следующий вопрос
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                previous_answer:
+                  type: string
+                  enum: [yes, no, dont_know]
+      responses:
+        '200':
+          description: Следующий вопрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  question:
+                    type: string
+                  session_id:
+                    type: string
+
+  /game/answer:
+    post:
+      summary: Отправить ответ на вопрос
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                answer:
+                  type: string
+                  enum: [yes, no, dont_know]
+      responses:
+        '200':
+          description: Результат ответа
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [question, object_found, no_matches]
+                  object:
+                    type: string
+                  session_id:
+                    type: string
+
+  /game/add_object:
+    post:
+      summary: Добавить новый объект
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                answers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                    enum: [yes, no, dont_know]
+      responses:
+        '200':
+          description: Результат добавления
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string 
