@@ -20,21 +20,21 @@
 ## AkinatorLogicService (Prolog)
 
 ### Базовый функционал
-- [x] Разработать структуру фактов Prolog для объектов (150+) - Vladimir CHertousov
-- [x] Разработать структуру фактов Prolog для вопросов (8+) - Vladimir CHertousov
-- [x] Реализовать предикаты для задавания вопросов - Vladimir CHertousov
-- [x] Реализовать предикаты для обработки ответов - Vladimir CHertousov
-- [x] Реализовать предикаты для поиска подходящего объекта - Vladimir CHertousov
-- [x] Реализовать раннюю выдачу ответа - Vladimir CHertousov
-- [x] Реализовать разные вопросы для разных объектов - Vladimir CHertousov
-- [x] Реализовать добавление нового объекта - Vladimir CHertousov
+- [x] Разработать структуру фактов Prolog для объектов (150+) - Vladimir CHertousov (003bf73)
+- [x] Разработать структуру фактов Prolog для вопросов (8+) - Vladimir CHertousov (003bf73)
+- [x] Реализовать предикаты для задавания вопросов - Vladimir CHertousov (003bf73)
+- [x] Реализовать предикаты для обработки ответов - Vladimir CHertousov (003bf73)
+- [x] Реализовать предикаты для поиска подходящего объекта - Vladimir CHertousov (003bf73)
+- [x] Реализовать раннюю выдачу ответа - Vladimir CHertousov (003bf73)
+- [x] Реализовать разные вопросы для разных объектов - Vladimir CHertousov (003bf73)
+- [x] Реализовать добавление нового объекта - Vladimir CHertousov (003bf73)
 
 ### HTTP Сервис
-- [x] Настроить встроенный HTTP-сервер SWI-Prolog - Vladimir CHertousov
-- [x] Реализовать endpoint `/game/next_question` или `/game/answer` - Vladimir CHertousov
-- [x] Реализовать endpoint `/game/add_object` - Vladimir CHertousov
-- [ ] Подготовить OpenAPI спецификацию - Artem-Darius Weber
-- [ ] Написать автотесты - Artem-Darius Weber
+- [x] Настроить встроенный HTTP-сервер SWI-Prolog - Vladimir CHertousov (0d46940)
+- [x] Реализовать endpoint `/game/next_question` или `/game/answer` - Vladimir CHertousov (0d46940)
+- [x] Реализовать endpoint `/game/add_object` - Vladimir CHertousov (0d46940)
+- [x] Подготовить OpenAPI спецификацию - Artem-Darius Weber (18a6982)
+- [x] Написать автотесты - Artem-Darius Weber (fffec55)
 - [ ] Развернуть на ресурсах лаборатории - Artem-Darius Weber
 
 ### Расширенный функционал
@@ -54,13 +54,13 @@
 - [x] Создать таблицу SessionAnswers - Artem-Darius Weber
 
 ### REST API
-- [x] Создать ASP.NET Core Web API проект - Meg-Lander
-- [x] Настроить EF Core - Artem-Darius Weber
-- [x] Реализовать endpoint `/api/users/register` - Artem-Darius Weber
-- [x] Реализовать endpoint `/api/users/login` - Artem-Darius Weber
-- [x] Реализовать endpoints для сессий - Artem-Darius Weber
-- [x] Подготовить OpenAPI спецификацию - Artem-Darius Weber
-- [ ] Написать автотесты - Artem-Darius Weber
+- [x] Создать ASP.NET Core Web API проект - Meg-Lander (bb111bb)
+- [x] Настроить EF Core - Artem-Darius Weber (bb111bb)
+- [x] Реализовать endpoint `/api/users/register` - Artem-Darius Weber (bb111bb)
+- [x] Реализовать endpoint `/api/users/login` - Artem-Darius Weber (bb111bb)
+- [x] Реализовать endpoints для сессий - Artem-Darius Weber (bb111bb)
+- [x] Подготовить OpenAPI спецификацию - Artem-Darius Weber (bb111bb)
+- [x] Написать автотесты - Artem-Darius Weber (44f8756)
 
 ### Расширенный функционал
 - [ ] Расширить схему БД для пользовательских вопросов
