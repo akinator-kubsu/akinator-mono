@@ -96,3 +96,16 @@ dev-stop: ## Остановить проект в режиме разработ�
 dev-rebuild: ## Пересобрать и перезапустить проект
 	@$(MAKE) rebuild S=akinator-api
 	@echo "• Проект пересобран и перезапущен"
+
+
+artem:
+	git config --global user.name "Artem-Darius Weber"
+	git config --global user.email "mit.3tlasa@gmail.com"
+
+sergey:
+	git config --global user.name "Sergey Dudo"
+	git config --global user.email "dudo@mail.ru"
+
+meg:
+	git config --global user.name "Meg-Lander"
+	git config --global user.email "chertousov-vova@ya.ru"
