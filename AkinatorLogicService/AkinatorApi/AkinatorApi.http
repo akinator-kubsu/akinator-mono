@@ -1,0 +1,6 @@
+@AkinatorApi_HostAddress = http://localhost:5185
+
+GET {{AkinatorApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
