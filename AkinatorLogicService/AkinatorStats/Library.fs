@@ -1,13 +1,16 @@
 ﻿namespace AkinatorStats
 
 open System
-open Microsoft.Data.Sqlite
+open Npgsql
 open Serilog
 open Serilog.Events
 
 module Stats =
     
-    let connectionString = "Data Source=akinator.db"
+    let private connectionString = 
+        match Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING") with
+        | null -> "Host=localhost;Database=akinator_db;Username=akinator_user;Password=akinator_password"
+        | value -> value
     
     let private logger = 
         LoggerConfiguration()
@@ -18,19 +21,19 @@ module Stats =
 
     let private executeQuery query =
         try
-            use connection = new SqliteConnection(connectionString)
+            use connection = new NpgsqlConnection(connectionString)
             connection.Open()
-            use command = new SqliteCommand(query, connection)
+            use command = new NpgsqlCommand(query, connection)
             command.ExecuteScalar() :?> int64 |> int
         with
         | ex -> 
             logger.Error(ex, "Ошибка при выполнении запроса: {Query}", query)
-            raise ex
+            0 // Возвращаем 0 вместо исключения
 
     let getUserCount () =
         logger.Debug("Получение количества пользователей")
-        executeQuery "SELECT COUNT(*) FROM Users"
+        executeQuery "SELECT COUNT(*) FROM users"
 
     let getSessionCount () =
         logger.Debug("Получение количества сессий")
-        executeQuery "SELECT COUNT(*) FROM Sessions"
+        executeQuery "SELECT COUNT(*) FROM sessions"
