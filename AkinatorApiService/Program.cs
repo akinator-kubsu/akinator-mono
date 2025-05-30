@@ -6,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
 
@@ -42,6 +45,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseStaticFiles();
 app.UseSession();
 app.UseRouting();
@@ -53,13 +59,22 @@ app.UseSentryTracing();
 // Тестовое логирование
 SentrySdk.CaptureMessage("Application started", SentryLevel.Info);
 
+// Главная страница: если пользователь залогинен -> Home, иначе -> Index
 app.MapGet("/", context =>
 {
-    SentrySdk.CaptureMessage("Home page accessed", SentryLevel.Info);
-    context.Response.Redirect("/Login");
+    var username = context.Session.GetString("Username");
+    if (!string.IsNullOrEmpty(username))
+    {
+        context.Response.Redirect("/Home");
+    }
+    else
+    {
+        context.Response.Redirect("/Index");
+    }
     return Task.CompletedTask;
 });
 
 app.MapRazorPages();
+app.MapControllers();
 
 app.Run();

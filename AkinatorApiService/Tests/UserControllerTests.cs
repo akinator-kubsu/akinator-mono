@@ -15,9 +15,8 @@ namespace AkinatorWeb.Tests
 
         public UserControllerTests()
         {
-            var dbStub = new Mock<IDatabaseService>().Object;
             var mapperStub = new Mock<IMapper>().Object;
-            _userService = new UserService(dbStub, mapperStub);
+            _userService = new UserService(mapperStub);
             _controller = new UserController(_userService);
         }
 
