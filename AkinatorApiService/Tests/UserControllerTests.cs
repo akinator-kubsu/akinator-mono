@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using AkinatorWeb.Controllers;
 using AkinatorWeb.Models;
 using AkinatorWeb.Services;
+using Moq;
+using AutoMapper;
 
 namespace AkinatorWeb.Tests
 {
@@ -13,7 +15,9 @@ namespace AkinatorWeb.Tests
 
         public UserControllerTests()
         {
-            _userService = new UserService();
+            var dbStub = new Mock<IDatabaseService>().Object;
+            var mapperStub = new Mock<IMapper>().Object;
+            _userService = new UserService(dbStub, mapperStub);
             _controller = new UserController(_userService);
         }
 

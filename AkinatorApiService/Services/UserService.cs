@@ -2,6 +2,8 @@ using Microsoft.Data.Sqlite;
 using AkinatorWeb.Models;
 using AkinatorWeb.DTOs;
 using AutoMapper;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AkinatorWeb.Services
 {
@@ -13,12 +15,15 @@ namespace AkinatorWeb.Services
         Task<UserDto> CreateAsync(CreateUserDto createUserDto);
         Task<UserDto?> UpdateAsync(int id, UpdateUserDto updateUserDto);
         Task<bool> DeleteAsync(int id);
+        bool Register(User user);
+        string? Login(LoginModel credentials);
     }
 
     public class UserService : IUserService
     {
         private readonly IDatabaseService _databaseService;
         private readonly IMapper _mapper;
+        private readonly Dictionary<string, string> _users = new();
 
         public UserService(IDatabaseService databaseService, IMapper mapper)
         {
@@ -171,6 +176,40 @@ namespace AkinatorWeb.Services
             cmd.Parameters.AddWithValue("@Id", id);
 
             return await cmd.ExecuteNonQueryAsync() > 0;
+        }
+
+        public bool Register(User user)
+        {
+            if (_users.ContainsKey(user.Username))
+                return false;
+
+            var hashedPassword = HashPassword(user.Password);
+            _users[user.Username] = hashedPassword;
+            return true;
+        }
+
+        public string? Login(LoginModel credentials)
+        {
+            if (!_users.TryGetValue(credentials.Username, out var storedHash))
+                return null;
+
+            var inputHash = HashPassword(credentials.Password);
+            if (inputHash != storedHash)
+                return null;
+
+            return GenerateToken(credentials.Username);
+        }
+
+        private string HashPassword(string password)
+        {
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
+        }
+
+        private string GenerateToken(string username)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{DateTime.UtcNow.Ticks}"));
         }
     }
 } 

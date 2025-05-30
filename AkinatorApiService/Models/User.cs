@@ -7,5 +7,6 @@ namespace AkinatorWeb.Models
         public string PasswordHash { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public string Password { get; set; } = string.Empty; // [NotMapped] для EF, если потребуется
     }
 } 
