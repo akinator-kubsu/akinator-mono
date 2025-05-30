@@ -1,10 +1,138 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Добро пожаловать в Akinator";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <i class="fas fa-magic text-primary" style="font-size: 5rem;"></i>
+                </div>
+                
+                <h1 class="display-4 mb-3">Добро пожаловать в</h1>
+                <h1 class="display-3 mb-4" style="background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                    Akinator
+                </h1>
+                
+                <p class="lead text-muted mb-4">
+                    Легендарная игра, где джинн читает ваши мысли и угадывает любого персонажа!
+                </p>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-brain text-primary mb-2" style="font-size: 2rem;"></i>
+                            <h6>Магия ИИ</h6>
+                            <small class="text-muted">Искусственный интеллект анализирует ваши ответы</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-users text-success mb-2" style="font-size: 2rem;"></i>
+                            <h6>Тысячи персонажей</h6>
+                            <small class="text-muted">От мультфильмов до знаменитостей</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-trophy text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6>Невероятная точность</h6>
+                            <small class="text-muted">Высокий процент угадывания</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid d-md-block gap-2">
+                    <a href="/Register" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0">
+                        <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
+                    </a>
+                    <a href="/Login" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Уже есть аккаунт
+                    </a>
+                </div>
+                
+                <div class="mt-4 pt-4 border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Создайте аккаунт, чтобы сохранять историю игр и отслеживать статистику
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Демо-секция -->
+<div class="row mt-5">
+    <div class="col-lg-8 mx-auto">
+        <div class="card game-card">
+            <div class="card-body p-4">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-play-circle text-primary me-2"></i>
+                    Как это работает?
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-primary rounded-circle p-3">
+                                    <i class="fas fa-question"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6>Задаём вопросы</h6>
+                                <p class="text-muted mb-0">Акинатор задаёт умные вопросы о вашем персонаже</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-success rounded-circle p-3">
+                                    <i class="fas fa-lightbulb"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6>Анализируем</h6>
+                                <p class="text-muted mb-0">ИИ обрабатывает ваши ответы и делает выводы</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-warning rounded-circle p-3">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6>Угадываем</h6>
+                                <p class="text-muted mb-0">Предлагаем наиболее вероятного персонажа</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <span class="badge bg-danger rounded-circle p-3">
+                                    <i class="fas fa-star"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6>Удивляем</h6>
+                                <p class="text-muted mb-0">Поражаем точностью наших предсказаний!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

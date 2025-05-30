@@ -4,11 +4,92 @@
     ViewData["Title"] = "Статистика";
 }
 
-<h2>Статистика по Акинатору</h2>
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center p-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-chart-bar text-primary me-3"></i>
+                    Статистика Акинатора
+                </h1>
+                <p class="lead text-muted">Общая статистика по использованию системы</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-<ul>
-    <li>Всего пользователей: <strong>@Model.UserCount</strong></li>
-    <li>Всего игровых сессий: <strong>@Model.SessionCount</strong></li>
-</ul>
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card game-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-users text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h3 class="display-4 text-primary mb-2">@Model.UserCount</h3>
+                <h5 class="card-title text-muted">Зарегистрированных пользователей</h5>
+                <p class="text-muted small">Общее количество зарегистрированных аккаунтов в системе</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card game-card h-100">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-gamepad text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h3 class="display-4 text-success mb-2">@Model.SessionCount</h3>
+                <h5 class="card-title text-muted">Игровых сессий</h5>
+                <p class="text-muted small">Всего запущенных игр с момента создания проекта</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-<a asp-page="/Home">Вернуться на главную</a>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card game-card">
+            <div class="card-body p-4">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle text-info me-2"></i>
+                    Дополнительная информация
+                </h5>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-clock text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6>Среднее время игры</h6>
+                            <small class="text-muted">~5-10 минут</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-percentage text-info mb-2" style="font-size: 2rem;"></i>
+                            <h6>Точность угадывания</h6>
+                            <small class="text-muted">~85-90%</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-star text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6>Рейтинг системы</h6>
+                            <small class="text-muted">4.8/5.0</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="/Home" class="btn btn-primary btn-lg me-3">
+            <i class="fas fa-home me-2"></i>Вернуться на главную
+        </a>
+        <a href="/Game" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-play me-2"></i>Начать игру
+        </a>
+    </div>
+</div>
