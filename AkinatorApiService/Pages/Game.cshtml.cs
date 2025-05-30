@@ -3,17 +3,21 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text.Json;
 using System.Text;
 using System.Net.Http;
-using Microsoft.Data.Sqlite;
 using System; // Добавлено для DateTime
 using System.Collections.Generic; // Добавлено для List
 using System.Threading.Tasks; // Добавлено для Task
 using Microsoft.AspNetCore.Http; // Добавлено для HttpContext.Session extensions
+using AkinatorWeb.Services;
+using AkinatorWeb.DTOs;
+using System.Security.Claims;
 
 namespace AkinatorWeb.Pages
 {
     public class GameModel : PageModel
     {
         private readonly IHttpClientFactory _clientFactory;
+        private readonly ISessionService _sessionService;
+        private readonly IUserService _userService;
         private static readonly List<AttributeItem> OrderedAttributes = new()
         {
             // Используем переводы из вашей Prolog БД
@@ -925,9 +929,11 @@ namespace AkinatorWeb.Pages
             new("is_assistant_to_the_regional_manager", "является \"помощником регионального менеджера\"")
         };
 
-        public GameModel(IHttpClientFactory clientFactory)
+        public GameModel(IHttpClientFactory clientFactory, ISessionService sessionService, IUserService userService)
         {
             _clientFactory = clientFactory;
+            _sessionService = sessionService;
+            _userService = userService;
             // Инициализация свойств, чтобы избежать предупреждений о nullable
             Answer = string.Empty;
             CurrentQuestionText = string.Empty;
@@ -945,13 +951,14 @@ namespace AkinatorWeb.Pages
         [BindProperty]
         public string FinalResult { get; set; }
 
-        public Task<IActionResult> OnGetAsync() // Сделал Task<IActionResult> для единообразия
+        public int? QuestionNumber => (HttpContext.Session.GetInt32("CurrentIndex") ?? 0) + 1;
+
+        public Task<IActionResult> OnGetAsync()
         {
             HttpContext.Session.SetInt32("CurrentIndex", 0);
-            // Убедимся, что сериализуем пустой список, если ничего нет
-            var emptyListJson = JsonSerializer.Serialize(new List<string>());
-            HttpContext.Session.SetString("YesAnswers", HttpContext.Session.GetString("YesAnswers") ?? emptyListJson);
-
+            // Инициализируем пустой словарь для ответов пользователя
+            var emptyDictJson = JsonSerializer.Serialize(new Dictionary<string, string>());
+            HttpContext.Session.SetString("UserAnswers", HttpContext.Session.GetString("UserAnswers") ?? emptyDictJson);
 
             if (OrderedAttributes.Count > 0)
             {
@@ -966,64 +973,228 @@ namespace AkinatorWeb.Pages
             return Task.FromResult<IActionResult>(Page());
         }
 
-        private void SaveSession(string username, string characterName)
+        private async Task SaveSessionAsync(string character)
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(characterName))
-                return;
+            try
+            {
+                var username = HttpContext.Session.GetString("Username");
+                if (!string.IsNullOrEmpty(username))
+                {
+                    // Получаем userId по username из базы данных
+                    var user = await _userService.GetByUsernameAsync(username);
+                    if (user != null)
+                    {
+                        var createDto = new CreateSessionDto
+                        {
+                            UserId = user.Id,
+                            CharacterName = character
+                        };
 
-            using var conn = new SqliteConnection("Data Source=akinator.db");
-            conn.Open();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                INSERT INTO Sessions (UserId, CharacterName, StartedAt)
-                SELECT Id, @CharacterName, @StartedAt
-                FROM Users
-                WHERE Username = @Username";
-
-            cmd.Parameters.AddWithValue("@Username", username);
-            cmd.Parameters.AddWithValue("@CharacterName", characterName);
-            cmd.Parameters.AddWithValue("@StartedAt", DateTime.UtcNow);
-
-            cmd.ExecuteNonQuery();
+                        await _sessionService.CreateAsync(createDto);
+                        Console.WriteLine($"Сессия сохранена для пользователя {username}: {character}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Пользователь {username} не найден в базе данных");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Пользователь не авторизован - username не найден в сессии");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при сохранении сессии: {ex.Message}");
+                Console.WriteLine($"Stacktrace: {ex.StackTrace}");
+            }
         }
 
-        public Task<IActionResult> OnPostAsync() // Сделал Task<IActionResult> для единообразия
+        public async Task<IActionResult> OnPostAsync()
         {
             var username = HttpContext.Session.GetString("Username");
             if (string.IsNullOrEmpty(username))
             {
-                return Task.FromResult<IActionResult>(RedirectToPage("/Login"));
+                return RedirectToPage("/Login");
             }
 
             var currentIndex = HttpContext.Session.GetInt32("CurrentIndex") ?? 0;
-            var yesAnswersJson = HttpContext.Session.GetString("YesAnswers") ?? JsonSerializer.Serialize(new List<string>());
-            var yesAnswers = JsonSerializer.Deserialize<List<string>>(yesAnswersJson) ?? new List<string>();
+            var userAnswersJson = HttpContext.Session.GetString("UserAnswers") ?? JsonSerializer.Serialize(new Dictionary<string, string>());
+            var userAnswers = JsonSerializer.Deserialize<Dictionary<string, string>>(userAnswersJson) ?? new Dictionary<string, string>();
 
-            if (Answer == "yes" && currentIndex < OrderedAttributes.Count) // Добавил проверку currentIndex < OrderedAttributes.Count
+            // Сохраняем ответ пользователя
+            if (currentIndex < OrderedAttributes.Count) 
             {
-                yesAnswers.Add(OrderedAttributes[currentIndex].Code);
+                var questionText = OrderedAttributes[currentIndex].Text;
+                userAnswers[questionText] = Answer.ToLower();
             }
 
             currentIndex++;
 
-            if (currentIndex >= OrderedAttributes.Count)
+            // Ограничиваем игру до 20 вопросов максимум
+            const int MAX_QUESTIONS = 20;
+            
+            if (currentIndex >= MAX_QUESTIONS || currentIndex >= OrderedAttributes.Count)
             {
                 Finished = true;
-                // Здесь должна быть логика обращения к Prolog или C# аналогу для получения результата
-                // Пока просто выводим собранные ответы "да"
-                FinalResult = $"Игра окончена! Атрибуты, на которые вы ответили 'да': {string.Join(", ", yesAnswers)}";
-                // Пример вызова SaveSession, если персонаж угадан (здесь нужен реальный CharacterName)
-                // SaveSession(username, "угаданный_персонаж"); 
-                return Task.FromResult<IActionResult>(Page());
+                // Логика определения персонажа на основе собранных атрибутов
+                var result = GuessCharacterFromAttributes(userAnswers);
+                FinalResult = result;
+                
+                // Сохраняем сессию игры
+                await SaveSessionAsync(result);
+                return Page();
             }
 
             HttpContext.Session.SetInt32("CurrentIndex", currentIndex);
-            HttpContext.Session.SetString("YesAnswers", JsonSerializer.Serialize(yesAnswers));
+            HttpContext.Session.SetString("UserAnswers", JsonSerializer.Serialize(userAnswers));
 
             // Используем .Text из AttributeItem
             CurrentQuestionText = $"{OrderedAttributes[currentIndex].Text}?";
-            return Task.FromResult<IActionResult>(Page());
+            return Page();
+        }
+
+        private string GuessCharacterFromAttributes(Dictionary<string, string> userAnswers)
+        {
+            var characters = new Dictionary<string, Dictionary<string, bool>>
+            {
+                ["Микки Маус"] = new Dictionary<string, bool>
+                {
+                    ["является анимированным персонажем"] = true,
+                    ["является мышью"] = true,
+                    ["имеет большие уши"] = true,
+                    ["носит красные шорты"] = true,
+                    ["из мультсериалов Диснея"] = true
+                },
+                ["СпанчБоб"] = new Dictionary<string, bool>
+                {
+                    ["является анимированным персонажем"] = true,
+                    ["живет под водой"] = true,
+                    ["работает в ресторане"] = true,
+                    ["является губкой"] = true,
+                    ["оптимистичный"] = true
+                },
+                ["Багз Банни"] = new Dictionary<string, bool>
+                {
+                    ["является анимированным персонажем"] = true,
+                    ["является кроликом/зайцем"] = true,
+                    ["ест морковь"] = true,
+                    ["из мультсериала \"Луни Тюнз\""] = true,
+                    ["перехитривает врагов"] = true
+                },
+                ["Гомер Симпсон"] = new Dictionary<string, bool>
+                {
+                    ["является анимированным персонажем"] = true,
+                    ["мужского пола"] = true,
+                    ["взрослый"] = true,
+                    ["из мультсериала \"Симпсоны\""] = true,
+                    ["лысеющий"] = true
+                },
+                ["Бэтмен"] = new Dictionary<string, bool>
+                {
+                    ["человек"] = true,
+                    ["мужского пола"] = true,
+                    ["является супергероем"] = true,
+                    ["носит костюм в стиле летучей мыши"] = true,
+                    ["живет в Готэм-Сити"] = true
+                },
+                ["Супермен"] = new Dictionary<string, bool>
+                {
+                    ["человек"] = true,
+                    ["мужского пола"] = true,
+                    ["является супергероем"] = true,
+                    ["умеет летать"] = true,
+                    ["носит синий костюм"] = true
+                },
+                ["Гарри Поттер"] = new Dictionary<string, bool>
+                {
+                    ["человек"] = true,
+                    ["является волшебником"] = true,
+                    ["носит очки"] = true,
+                    ["учится в школе магии Хогвартс"] = true,
+                    ["имеет шрам на лбу"] = true
+                },
+                ["Шерлок Холмс"] = new Dictionary<string, bool>
+                {
+                    ["человек"] = true,
+                    ["является детективом"] = true,
+                    ["курит трубку"] = true,
+                    ["живет по адресу Бейкер-стрит, 221Б"] = true,
+                    ["имеет компаньона-доктора по имени Ватсон"] = true
+                },
+                ["Йода"] = new Dictionary<string, bool>
+                {
+                    ["не человек"] = true,
+                    ["очень маленького роста"] = true,
+                    ["зеленого цвета"] = true,
+                    ["владеет световым мечом"] = true,
+                    ["говорит необычно"] = true
+                },
+                ["Пикачу"] = new Dictionary<string, bool>
+                {
+                    ["не человек"] = true,
+                    ["желтый"] = true,
+                    ["может генерировать электричество"] = true,
+                    ["говорит только свое имя"] = true,
+                    ["является домашним животным"] = true
+                }
+            };
+
+            var scores = new Dictionary<string, double>();
+
+            foreach (var character in characters)
+            {
+                int matchingAnswers = 0;
+                int totalRelevantQuestions = 0;
+
+                foreach (var trait in character.Value)
+                {
+                    if (userAnswers.ContainsKey(trait.Key))
+                    {
+                        totalRelevantQuestions++;
+                        var userAnswer = userAnswers[trait.Key];
+                        var expectedAnswer = trait.Value;
+
+                        if ((userAnswer == "yes" && expectedAnswer) || 
+                            (userAnswer == "no" && !expectedAnswer))
+                        {
+                            matchingAnswers += 2;
+                        }
+                        else if (userAnswer == "probably" && expectedAnswer)
+                        {
+                            matchingAnswers += 1;
+                        }
+                        else if (userAnswer == "probably_not" && !expectedAnswer)
+                        {
+                            matchingAnswers += 1;
+                        }
+                        else if (userAnswer == "dont_know")
+                        {
+                            matchingAnswers += 0;
+                        }
+                    }
+                }
+
+                if (totalRelevantQuestions > 0)
+                {
+                    scores[character.Key] = (double)matchingAnswers / (totalRelevantQuestions * 2) * 100;
+                }
+            }
+
+            if (scores.Any())
+            {
+                var bestMatch = scores.OrderByDescending(x => x.Value).First();
+                if (bestMatch.Value >= 60)
+                {
+                    return $"{bestMatch.Key} (уверенность: {bestMatch.Value:F0}%)";
+                }
+                else if (bestMatch.Value >= 30)
+                {
+                    return $"Возможно, это {bestMatch.Key} (уверенность: {bestMatch.Value:F0}%)";
+                }
+            }
+
+            return "Не могу угадать персонажа";
         }
 
         public class AttributeItem
