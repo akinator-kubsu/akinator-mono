@@ -1,11 +1,11 @@
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using Microsoft.Extensions.Configuration;
 
 namespace AkinatorWeb.Services
 {
     public interface IDatabaseService
     {
-        SqliteConnection GetConnection();
+        NpgsqlConnection GetConnection();
     }
 
     public class DatabaseService : IDatabaseService
@@ -14,14 +14,14 @@ namespace AkinatorWeb.Services
 
         public DatabaseService(IConfiguration configuration)
         {
-            var dbPath = configuration["Database:Path"] ?? "akinator.db";
-            _connectionString = $"Data Source={dbPath};";
+            _connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING") 
+                ?? "Host=localhost;Database=akinator_db;Username=akinator_user;Password=akinator_password";
             InitializeDatabase();
         }
 
-        public SqliteConnection GetConnection()
+        public NpgsqlConnection GetConnection()
         {
-            return new SqliteConnection(_connectionString);
+            return new NpgsqlConnection(_connectionString);
         }
 
         private void InitializeDatabase()
@@ -31,21 +31,21 @@ namespace AkinatorWeb.Services
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
-                CREATE TABLE IF NOT EXISTS Users (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Username TEXT NOT NULL UNIQUE,
-                    PasswordHash TEXT NOT NULL,
-                    CreatedAt DATETIME NOT NULL,
-                    LastLoginAt DATETIME
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    last_login_at TIMESTAMP
                 );
 
-                CREATE TABLE IF NOT EXISTS Sessions (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    UserId INTEGER NOT NULL,
-                    CharacterName TEXT NOT NULL,
-                    StartedAt DATETIME NOT NULL,
-                    EndedAt DATETIME,
-                    FOREIGN KEY (UserId) REFERENCES Users(Id)
+                CREATE TABLE IF NOT EXISTS sessions (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    character_name VARCHAR(500) NOT NULL,
+                    started_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                    ended_at TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
                 );";
 
             cmd.ExecuteNonQuery();

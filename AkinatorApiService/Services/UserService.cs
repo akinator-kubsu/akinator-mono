@@ -1,9 +1,10 @@
-using Microsoft.Data.Sqlite;
+using AkinatorDbLib;
 using AkinatorWeb.Models;
 using AkinatorWeb.DTOs;
 using AutoMapper;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.FSharp.Core;
 
 namespace AkinatorWeb.Services
 {
@@ -15,201 +16,108 @@ namespace AkinatorWeb.Services
         Task<UserDto> CreateAsync(CreateUserDto createUserDto);
         Task<UserDto?> UpdateAsync(int id, UpdateUserDto updateUserDto);
         Task<bool> DeleteAsync(int id);
-        bool Register(User user);
+        bool Register(AkinatorWeb.Models.User user);
         string? Login(LoginModel credentials);
+        
+        // Новые методы для Razor Pages
+        Task<bool> RegisterUserAsync(RegisterRequest request);
+        Task<LoginResponse?> LoginUserAsync(LoginRequest request);
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
     }
 
     public class UserService : IUserService
     {
-        private readonly IDatabaseService _databaseService;
         private readonly IMapper _mapper;
-        private readonly Dictionary<string, string> _users = new();
 
-        public UserService(IDatabaseService databaseService, IMapper mapper)
+        public UserService(IMapper mapper)
         {
-            _databaseService = databaseService;
             _mapper = mapper;
         }
 
         public async Task<UserDto?> GetByIdAsync(int id)
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Username, PasswordHash, CreatedAt, LastLoginAt FROM Users WHERE Id = @Id";
-            cmd.Parameters.AddWithValue("@Id", id);
-
-            using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                var user = new User
-                {
-                    Id = reader.GetInt32(0),
-                    Username = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    CreatedAt = reader.GetDateTime(3),
-                    LastLoginAt = reader.IsDBNull(4) ? null : reader.GetDateTime(4)
-                };
-                return _mapper.Map<UserDto>(user);
-            }
-            return null;
+            var userOption = UserRepositoryWrapper.GetUserById(id);
+            if (FSharpOption<AkinatorDbLib.User>.get_IsNone(userOption))
+                return null;
+            
+            var user = userOption.Value;
+            return _mapper.Map<UserDto>(user);
         }
 
         public async Task<UserDto?> GetByUsernameAsync(string username)
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Username, PasswordHash, CreatedAt, LastLoginAt FROM Users WHERE Username = @Username";
-            cmd.Parameters.AddWithValue("@Username", username);
-
-            using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                var user = new User
-                {
-                    Id = reader.GetInt32(0),
-                    Username = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    CreatedAt = reader.GetDateTime(3),
-                    LastLoginAt = reader.IsDBNull(4) ? null : reader.GetDateTime(4)
-                };
-                return _mapper.Map<UserDto>(user);
-            }
-            return null;
+            var userOption = UserRepositoryWrapper.GetUserByUsername(username);
+            if (FSharpOption<AkinatorDbLib.User>.get_IsNone(userOption))
+                return null;
+            
+            var user = userOption.Value;
+            return _mapper.Map<UserDto>(user);
         }
 
         public async Task<IEnumerable<UserDto>> GetAllAsync()
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id, Username, PasswordHash, CreatedAt, LastLoginAt FROM Users";
-            using var reader = await cmd.ExecuteReaderAsync();
-
-            var users = new List<User>();
-            while (await reader.ReadAsync())
-            {
-                users.Add(new User
-                {
-                    Id = reader.GetInt32(0),
-                    Username = reader.GetString(1),
-                    PasswordHash = reader.GetString(2),
-                    CreatedAt = reader.GetDateTime(3),
-                    LastLoginAt = reader.IsDBNull(4) ? null : reader.GetDateTime(4)
-                });
-            }
+            var users = UserRepositoryWrapper.GetAllUsers();
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 
         public async Task<UserDto> CreateAsync(CreateUserDto createUserDto)
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            var command = conn.CreateCommand();
-            command.CommandText = @"
-                INSERT INTO Users (Username, PasswordHash, CreatedAt)
-                VALUES (@Username, @PasswordHash, @CreatedAt);
-                SELECT last_insert_rowid();";
-
-            command.Parameters.AddWithValue("@Username", createUserDto.Username);
-            command.Parameters.AddWithValue("@PasswordHash", createUserDto.PasswordHash);
-            command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
-
-            var userId = Convert.ToInt32(await command.ExecuteScalarAsync());
-
-            return new UserDto
-            {
-                Id = userId,
-                Username = createUserDto.Username,
-                CreatedAt = DateTime.UtcNow
-            };
+            var userOption = UserRepositoryWrapper.CreateUser(createUserDto.Username, createUserDto.PasswordHash, DateTime.UtcNow);
+            if (FSharpOption<AkinatorDbLib.User>.get_IsNone(userOption))
+                throw new InvalidOperationException("Failed to create user");
+            
+            var user = userOption.Value;
+            return _mapper.Map<UserDto>(user);
         }
 
         public async Task<UserDto?> UpdateAsync(int id, UpdateUserDto updateUserDto)
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            var updates = new List<string>();
-            var parameters = new Dictionary<string, object> { { "@Id", id } };
-
-            if (updateUserDto.Username != null)
-            {
-                updates.Add("Username = @Username");
-                parameters["@Username"] = updateUserDto.Username;
-            }
-
-            if (updateUserDto.PasswordHash != null)
-            {
-                updates.Add("PasswordHash = @PasswordHash");
-                parameters["@PasswordHash"] = updateUserDto.PasswordHash;
-            }
-
-            if (!updates.Any())
-                return await GetByIdAsync(id);
-
-            var sql = $"UPDATE Users SET {string.Join(", ", updates)} WHERE Id = @Id";
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
-
-            foreach (var param in parameters)
-            {
-                cmd.Parameters.AddWithValue(param.Key, param.Value);
-            }
-
-            await cmd.ExecuteNonQueryAsync();
-            return await GetByIdAsync(id);
+            var userOption = UserRepositoryWrapper.UpdateUser(id, updateUserDto.Username ?? "", updateUserDto.PasswordHash ?? "");
+            if (FSharpOption<AkinatorDbLib.User>.get_IsNone(userOption))
+                return null;
+            
+            var user = userOption.Value;
+            return _mapper.Map<UserDto>(user);
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            using var conn = _databaseService.GetConnection();
-            await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM Users WHERE Id = @Id";
-            cmd.Parameters.AddWithValue("@Id", id);
-
-            return await cmd.ExecuteNonQueryAsync() > 0;
+            return UserRepositoryWrapper.DeleteUser(id);
         }
 
-        public bool Register(User user)
+        public bool Register(AkinatorWeb.Models.User user)
         {
-            if (_users.ContainsKey(user.Username))
-                return false;
-
-            var hashedPassword = HashPassword(user.Password);
-            _users[user.Username] = hashedPassword;
-            return true;
+            return UserRepositoryWrapper.RegisterUser(user.Username, user.Password);
         }
 
         public string? Login(LoginModel credentials)
         {
-            if (!_users.TryGetValue(credentials.Username, out var storedHash))
-                return null;
-
-            var inputHash = HashPassword(credentials.Password);
-            if (inputHash != storedHash)
-                return null;
-
-            return GenerateToken(credentials.Username);
+            var result = UserRepositoryWrapper.LoginUser(credentials.Username, credentials.Password);
+            return FSharpOption<string>.get_IsNone(result) ? null : result.Value;
         }
 
-        private string HashPassword(string password)
+        // Новые методы для Razor Pages
+        public async Task<bool> RegisterUserAsync(RegisterRequest request)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return UserRepositoryWrapper.RegisterUser(request.Username, request.Password);
         }
 
-        private string GenerateToken(string username)
+        public async Task<LoginResponse?> LoginUserAsync(LoginRequest request)
         {
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{DateTime.UtcNow.Ticks}"));
+            var result = UserRepositoryWrapper.LoginUser(request.Username, request.Password);
+            if (FSharpOption<string>.get_IsNone(result))
+                return null;
+            
+            return new LoginResponse 
+            { 
+                Token = result.Value,
+                Message = "Login successful" 
+            };
+        }
+
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+            return await GetAllAsync();
         }
     }
 } 

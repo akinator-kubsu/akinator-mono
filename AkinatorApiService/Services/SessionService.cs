@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using AkinatorWeb.Models;
 using AkinatorWeb.DTOs;
 using AutoMapper;
@@ -32,11 +32,11 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand(@"
-                SELECT s.*, u.Username 
-                FROM Sessions s
-                JOIN Users u ON s.UserId = u.Id
-                WHERE s.Id = @Id", conn);
+            using var cmd = new NpgsqlCommand(@"
+                SELECT s.id, s.user_id, s.character_name, s.started_at, s.ended_at, u.username 
+                FROM sessions s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.id = @Id", conn);
             cmd.Parameters.AddWithValue("@Id", id);
 
             using var reader = await cmd.ExecuteReaderAsync();
@@ -61,12 +61,12 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand(@"
-                SELECT s.*, u.Username 
-                FROM Sessions s
-                JOIN Users u ON s.UserId = u.Id
-                WHERE s.UserId = @UserId
-                ORDER BY s.StartedAt DESC", conn);
+            using var cmd = new NpgsqlCommand(@"
+                SELECT s.id, s.user_id, s.character_name, s.started_at, s.ended_at, u.username 
+                FROM sessions s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.user_id = @UserId
+                ORDER BY s.started_at DESC", conn);
             cmd.Parameters.AddWithValue("@UserId", userId);
 
             using var reader = await cmd.ExecuteReaderAsync();
@@ -91,11 +91,11 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand(@"
-                SELECT s.*, u.Username 
-                FROM Sessions s
-                JOIN Users u ON s.UserId = u.Id
-                ORDER BY s.StartedAt DESC", conn);
+            using var cmd = new NpgsqlCommand(@"
+                SELECT s.id, s.user_id, s.character_name, s.started_at, s.ended_at, u.username 
+                FROM sessions s
+                JOIN users u ON s.user_id = u.id
+                ORDER BY s.started_at DESC", conn);
 
             using var reader = await cmd.ExecuteReaderAsync();
             var sessions = new List<Session>();
@@ -119,10 +119,10 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand(@"
-                INSERT INTO Sessions (UserId, CharacterName, StartedAt)
-                VALUES (@UserId, @CharacterName, @StartedAt);
-                SELECT last_insert_rowid();", conn);
+            using var cmd = new NpgsqlCommand(@"
+                INSERT INTO sessions (user_id, character_name, started_at)
+                VALUES (@UserId, @CharacterName, @StartedAt)
+                RETURNING id", conn);
 
             var now = DateTime.UtcNow;
             cmd.Parameters.AddWithValue("@UserId", createSessionDto.UserId);
@@ -143,21 +143,21 @@ namespace AkinatorWeb.Services
 
             if (updateSessionDto.CharacterName != null)
             {
-                updates.Add("CharacterName = @CharacterName");
+                updates.Add("character_name = @CharacterName");
                 parameters["@CharacterName"] = updateSessionDto.CharacterName;
             }
 
             if (updateSessionDto.EndedAt != null)
             {
-                updates.Add("EndedAt = @EndedAt");
+                updates.Add("ended_at = @EndedAt");
                 parameters["@EndedAt"] = updateSessionDto.EndedAt;
             }
 
             if (!updates.Any())
                 return await GetByIdAsync(id);
 
-            var sql = $"UPDATE Sessions SET {string.Join(", ", updates)} WHERE Id = @Id";
-            using var cmd = new SqliteCommand(sql, conn);
+            var sql = $"UPDATE sessions SET {string.Join(", ", updates)} WHERE id = @Id";
+            using var cmd = new NpgsqlCommand(sql, conn);
 
             foreach (var param in parameters)
             {
@@ -173,7 +173,7 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand("DELETE FROM Sessions WHERE Id = @Id", conn);
+            using var cmd = new NpgsqlCommand("DELETE FROM sessions WHERE id = @Id", conn);
             cmd.Parameters.AddWithValue("@Id", id);
 
             return await cmd.ExecuteNonQueryAsync() > 0;
@@ -184,7 +184,7 @@ namespace AkinatorWeb.Services
             using var conn = _databaseService.GetConnection();
             await conn.OpenAsync();
 
-            using var cmd = new SqliteCommand("SELECT COUNT(*) FROM Sessions", conn);
+            using var cmd = new NpgsqlCommand("SELECT COUNT(*) FROM sessions", conn);
             return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
     }
