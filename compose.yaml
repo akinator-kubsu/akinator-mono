@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: akinator_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./AkinatorLogicService/AkinatorDbLib/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - akinator-network
+
+  akinator-api:
+    build:
+      context: .
+      dockerfile: AkinatorApiService/Dockerfile
+    env_file:
+      - config.env
+    environment:
+      - SENTRY_DSN=https://d31fac0ec6335ec33e8972670e74fcf0@o4509378568454144.ingest.us.sentry.io/4509378570420224
+      - SENTRY_ENVIRONMENT=production
+      - SENTRY_TRACES_SAMPLE_RATE=1.0
+      - POSTGRES_CONNECTION_STRING=Host=postgres;Database=akinator_db;Username=akinator_user;Password=akinator_password
+    ports:
+      - "${API_PORT_HTTP}:80"
+      - "${API_PORT_HTTPS}:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./AkinatorApiService/Properties/launchSettings.json:/app/Properties/launchSettings.json:ro
+      - akinator-data:/root/.aspnet/DataProtection-Keys
+      - ./AkinatorApiService/logs:/app/logs
+    networks:
+      - akinator-network
+    depends_on:
+      - postgres
+
+networks:
+  akinator-network:
+    driver: bridge
+
+volumes:
+  akinator-data:
+  postgres-data: 

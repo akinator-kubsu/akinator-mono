@@ -1,0 +1,159 @@
+﻿@page
+@model AkinatorWeb.Pages.GameModel
+@{
+    ViewData["Title"] = "Игра с Акинатором";
+}
+
+<style>
+    .answer-btn {
+        height: 100px;
+        transition: all 0.3s ease;
+        border-radius: 15px !important;
+    }
+    
+    .answer-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+    
+    .game-card {
+        border: none;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border-radius: 20px;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card game-card">
+            <div class="card-body p-5">
+                <!-- Заголовок игры -->
+                <div class="text-center mb-5">
+                    <div class="mb-3">
+                        <i class="fas fa-magic text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    <h1 class="display-5 mb-2">Акинатор читает ваши мысли</h1>
+                    <p class="lead text-muted">Загадайте персонажа, и я попытаюсь его угадать!</p>
+                </div>
+
+                @if (!Model.Finished)
+                {
+                    <!-- Секция с вопросом -->
+                    <div class="question-section">
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <i class="fas fa-question-circle text-primary" style="font-size: 2rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Вопрос @(Model.QuestionNumber ?? 1)</h5>
+                                        <small class="text-muted">Отвечайте честно для лучшего результата</small>
+                                    </div>
+                                </div>
+                                
+                                <h3 class="text-center mb-4">@Model.CurrentQuestionText</h3>
+                            </div>
+                        </div>
+
+                        <!-- Кнопки ответов -->
+                        <form method="post" class="text-center">
+                            <div class="row g-3 justify-content-center">
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" name="Answer" value="yes" 
+                                            class="btn btn-success btn-lg w-100 answer-btn">
+                                        <i class="fas fa-check me-2"></i>
+                                        <div>Да</div>
+                                        <small class="d-block mt-1">Точно</small>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" name="Answer" value="no" 
+                                            class="btn btn-danger btn-lg w-100 answer-btn">
+                                        <i class="fas fa-times me-2"></i>
+                                        <div>Нет</div>
+                                        <small class="d-block mt-1">Точно нет</small>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" name="Answer" value="probably" 
+                                            class="btn btn-info btn-lg w-100 answer-btn">
+                                        <i class="fas fa-thumbs-up me-2"></i>
+                                        <div>Вероятно</div>
+                                        <small class="d-block mt-1">Скорее да</small>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" name="Answer" value="probably_not" 
+                                            class="btn btn-warning btn-lg w-100 answer-btn">
+                                        <i class="fas fa-thumbs-down me-2"></i>
+                                        <div>Вряд ли</div>
+                                        <small class="d-block mt-1">Скорее нет</small>
+                                    </button>
+                                </div>
+                                
+                                <div class="col-md-3 col-6">
+                                    <button type="submit" name="Answer" value="dont_know" 
+                                            class="btn btn-secondary btn-lg w-100 answer-btn">
+                                        <i class="fas fa-question me-2"></i>
+                                        <div>Не знаю</div>
+                                        <small class="d-block mt-1">Затрудняюсь</small>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <!-- Результат игры -->
+                    <div class="result-section text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-star text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        
+                        <h2 class="mb-3">🎯 Результат</h2>
+                        
+                        <div class="card border-0 bg-light mb-4">
+                            <div class="card-body p-4">
+                                <h4 class="text-primary mb-3">@Model.FinalResult</h4>
+                                <p class="text-muted">Угадал ли я вашего персонажа?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid d-md-block gap-2">
+                            <a href="/Game" class="btn btn-primary btn-lg me-md-3 mb-2 mb-md-0">
+                                <i class="fas fa-redo me-2"></i>Играть еще раз
+                            </a>
+                            <a href="/Home" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-home me-2"></i>На главную
+                            </a>
+                        </div>
+                    </div>
+                }
+                
+                <!-- Прогресс -->
+                @if (!Model.Finished && Model.QuestionNumber.HasValue)
+                {
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">Прогресс</small>
+                            <small class="text-muted">Вопрос @Model.QuestionNumber из 20</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: @(Math.Min(100, (Model.QuestionNumber ?? 1) * 5))%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
